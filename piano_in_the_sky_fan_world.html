@@ -1,0 +1,443 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+#shell{width:100%;border-radius:12px;overflow:hidden;background:#0a0814;position:relative}
+canvas#bg{display:block;width:100%}
+#screens{position:absolute;top:0;left:0;width:100%;height:100%}
+
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .6s}
+.screen.active{opacity:1;pointer-events:all}
+
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.sans{font-family:'Inter',sans-serif}
+
+#s-home{text-align:center;gap:10px}
+.home-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(26px,5vw,42px);font-weight:300;color:#f0e8ff;letter-spacing:.1em;line-height:1.2}
+.home-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(13px,2.2vw,17px);font-style:italic;font-weight:300;color:#9070c0;margin-top:4px;letter-spacing:.05em}
+.home-tagline{font-family:'Inter',sans-serif;font-size:clamp(9px,1.5vw,11px);font-weight:300;letter-spacing:.2em;color:#5a4070;margin-top:16px;text-transform:uppercase}
+.home-btns{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;justify-content:center}
+.btn-sky{font-family:'Inter',sans-serif;font-size:11px;font-weight:400;letter-spacing:.16em;padding:10px 24px;border-radius:20px;cursor:pointer;transition:all .22s;border:1px solid rgba(160,110,240,.45);background:transparent;color:#c8a8f0}
+.btn-sky:hover{background:rgba(160,110,240,.15);border-color:rgba(160,110,240,.9)}
+.btn-sky.filled{background:rgba(120,70,200,.25);border-color:rgba(160,110,240,.7)}
+.btn-sky.filled:hover{background:rgba(120,70,200,.45)}
+
+#s-game{padding:0}
+#game-hud{position:absolute;top:0;left:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;z-index:10}
+.pill{font-family:'Inter',sans-serif;font-size:10px;font-weight:300;letter-spacing:.12em;color:#c8b0e8;background:rgba(13,11,31,.75);padding:5px 13px;border-radius:16px;border:1px solid rgba(150,100,220,.22)}
+#game-msg{position:absolute;bottom:0;left:0;width:100%;text-align:center;padding:10px;font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(14px,2.5vw,18px);font-style:italic;font-weight:300;color:#c8a8e8;letter-spacing:.05em;pointer-events:none;opacity:0;transition:opacity .3s}
+#combo-txt{position:absolute;top:55px;left:50%;transform:translateX(-50%);font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-style:italic;color:#f0e0ff;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#game-over-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;background:rgba(10,8,20,.85);padding:32px 40px;border-radius:16px;border:1px solid rgba(150,100,220,.3)}
+
+#s-letter{padding:20px;gap:0;justify-content:flex-start;overflow-y:auto}
+.letter-wrap{width:100%;max-width:520px;margin:0 auto;padding:20px 0}
+.letter-header{text-align:center;margin-bottom:20px}
+.letter-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(20px,4vw,28px);font-weight:300;color:#f0e8ff;letter-spacing:.08em}
+.letter-hint{font-family:'Inter',sans-serif;font-size:10px;font-weight:300;letter-spacing:.15em;color:#5a4070;margin-top:6px;text-transform:uppercase}
+.field-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:400;letter-spacing:.15em;color:#7060a0;text-transform:uppercase;margin:14px 0 5px}
+.sky-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(150,100,220,.22);border-radius:8px;padding:10px 14px;color:#e0d0f8;font-family:'Inter',sans-serif;font-size:13px;font-weight:300;outline:none;transition:border-color .2s;resize:none}
+.sky-input::placeholder{color:#4a3868}
+.sky-input:focus{border-color:rgba(160,110,240,.6)}
+.sky-textarea{min-height:140px;line-height:1.7}
+.letter-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.send-note{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-style:italic;color:#7060a0;margin-top:10px;text-align:center;opacity:0;transition:opacity .5s}
+
+#s-sky-wall{padding:16px;gap:0;justify-content:flex-start;overflow-y:auto}
+.wall-wrap{width:100%;max-width:580px;margin:0 auto}
+.wall-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(18px,3.5vw,24px);font-weight:300;color:#f0e8ff;letter-spacing:.08em;text-align:center;margin-bottom:6px}
+.wall-sub{font-family:'Inter',sans-serif;font-size:10px;font-weight:300;letter-spacing:.15em;color:#5a4070;text-align:center;margin-bottom:18px;text-transform:uppercase}
+.letters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.letter-card{background:rgba(255,255,255,.03);border:1px solid rgba(150,100,220,.18);border-radius:10px;padding:14px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
+.letter-card:hover{background:rgba(160,110,240,.08);border-color:rgba(160,110,240,.45)}
+.card-from{font-family:'Inter',sans-serif;font-size:9px;font-weight:400;letter-spacing:.14em;color:#7060a0;text-transform:uppercase;margin-bottom:5px}
+.card-preview{font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-style:italic;font-weight:300;color:#c8a8e8;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-dot{width:6px;height:6px;border-radius:50%;background:#9060d0;position:absolute;top:12px;right:12px;opacity:.5}
+.letter-expand{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:420px;background:#140e28;border:1px solid rgba(160,110,240,.4);border-radius:14px;padding:28px;z-index:20;display:none}
+.expand-name{font-family:'Inter',sans-serif;font-size:10px;font-weight:400;letter-spacing:.18em;color:#7060a0;text-transform:uppercase;margin-bottom:8px}
+.expand-body{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:300;font-style:italic;color:#e0d0f8;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.expand-close{position:absolute;top:14px;right:16px;background:none;border:none;color:#7060a0;font-size:18px;cursor:pointer;font-family:serif;line-height:1}
+.empty-state{text-align:center;padding:40px 20px;color:#4a3868;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic}
+
+#nav-bar{position:absolute;bottom:0;left:0;width:100%;display:flex;justify-content:center;gap:0;background:rgba(10,8,20,.8);border-top:1px solid rgba(150,100,220,.12);z-index:15}
+.nav-btn{flex:1;max-width:130px;padding:11px 8px;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:9px;font-weight:300;letter-spacing:.14em;color:#5a4070;text-transform:uppercase;transition:color .2s;text-align:center}
+.nav-btn:hover,.nav-btn.active{color:#c8a8f0}
+.nav-btn.active{border-top:1px solid rgba(160,110,240,.5);margin-top:-1px}
+</style>
+
+<div id="shell">
+  <canvas id="bg"></canvas>
+  <div id="screens">
+
+    <!-- HOME -->
+    <div class="screen active" id="s-home">
+      <div class="home-title">Piano in the Sky</div>
+      <div class="home-sub">a daydream by jessi lilli</div>
+      <div class="home-tagline">fan experience</div>
+      <div class="home-btns">
+        <button class="btn-sky filled" onclick="goTo('game')">play the dream</button>
+        <button class="btn-sky" onclick="goTo('letter')">write to jessi</button>
+        <button class="btn-sky" onclick="goTo('wall')">sky wall</button>
+      </div>
+    </div>
+
+    <!-- GAME -->
+    <div class="screen" id="s-game">
+      <div id="game-hud">
+        <div class="pill" id="g-score">score  0</div>
+        <div class="pill" id="g-level">daydream I</div>
+        <div class="pill" id="g-lives">♡ ♡ ♡</div>
+      </div>
+      <div id="combo-txt"></div>
+      <div id="game-msg"></div>
+      <div id="game-over-panel">
+        <div class="serif" style="font-size:22px;font-weight:300;color:#f0e8ff;letter-spacing:.06em" id="go-title">the dream fades</div>
+        <div class="sans" style="font-size:10px;font-weight:300;letter-spacing:.16em;color:#7060a0;margin-top:6px;text-transform:uppercase">you caught the melody</div>
+        <div class="serif" style="font-size:16px;font-weight:300;color:#c8a8e8;margin:14px 0 20px;font-style:italic" id="go-score"></div>
+        <button class="btn-sky" onclick="startGame()">dream again</button>
+        <button class="btn-sky" style="margin-left:8px" onclick="goTo('letter')">write to jessi</button>
+      </div>
+    </div>
+
+    <!-- LETTER -->
+    <div class="screen" id="s-letter">
+      <div class="letter-wrap">
+        <div class="letter-header">
+          <div class="letter-title">a letter to jessi</div>
+          <div class="letter-hint">send your words into the sky</div>
+        </div>
+        <div class="field-label">your name</div>
+        <input class="sky-input" id="l-name" type="text" placeholder="what shall i call you?">
+        <div class="field-label">your message</div>
+        <textarea class="sky-input sky-textarea" id="l-body" placeholder="dear jessi, your music found me when..."></textarea>
+        <div class="field-label">how did piano in the sky make you feel?</div>
+        <input class="sky-input" id="l-feeling" type="text" placeholder="like floating, like crying, like being understood...">
+        <div class="letter-actions">
+          <button class="btn-sky" onclick="goTo('home')">back</button>
+          <button class="btn-sky filled" onclick="sendLetter()">release into the sky</button>
+        </div>
+        <div class="send-note serif" id="send-note">your letter has floated up to jessi ✦</div>
+      </div>
+    </div>
+
+    <!-- SKY WALL -->
+    <div class="screen" id="s-sky-wall">
+      <div class="wall-wrap">
+        <div class="wall-title">the sky wall</div>
+        <div class="wall-sub">letters from the dreamers</div>
+        <div class="letters-grid" id="letters-grid"></div>
+        <div class="empty-state" id="wall-empty" style="display:none">no letters yet — be the first to write to jessi</div>
+        <div style="text-align:center;margin-top:18px">
+          <button class="btn-sky" onclick="goTo('letter')">add your letter</button>
+        </div>
+      </div>
+      <div class="letter-expand" id="letter-expand">
+        <button class="expand-close" onclick="closeExpand()">×</button>
+        <div class="expand-name" id="exp-name"></div>
+        <div class="serif" style="font-size:11px;font-weight:300;color:#5a4070;margin-bottom:4px;font-style:italic" id="exp-feeling"></div>
+        <div class="expand-body" id="exp-body"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NAV -->
+  <div id="nav-bar" style="display:none">
+    <button class="nav-btn active" id="nav-home" onclick="goTo('home')">home</button>
+    <button class="nav-btn" id="nav-game" onclick="goTo('game')">play</button>
+    <button class="nav-btn" id="nav-letter" onclick="goTo('letter')">write</button>
+    <button class="nav-btn" id="nav-wall" onclick="goTo('wall')">sky wall</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+const shell = document.getElementById('shell');
+let W, H, dpr, frame = 0, bgRunning = false;
+let stars = [], clouds = [], notes = [], particles = [];
+let currentScreen = 'home';
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = shell.clientWidth;
+  H = Math.round(W * 0.58);
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  shell.style.height = H + 'px';
+  ['s-home','s-game','s-letter','s-sky-wall'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.height = H + 'px';
+  });
+}
+resize();
+window.addEventListener('resize', () => { resize(); });
+
+function initStars() {
+  stars = [];
+  for(let i=0;i<80;i++) stars.push({x:Math.random()*W, y:Math.random()*H*.7, r:.3+Math.random()*1.1, tw:Math.random()*Math.PI*2, sp:.005+Math.random()*.018});
+}
+function initClouds() {
+  clouds = [];
+  for(let i=0;i<6;i++) clouds.push({x:Math.random()*W*1.3-W*.1, y:H*.4+Math.random()*H*.38, w:70+Math.random()*110, h:18+Math.random()*16, sp:.08+Math.random()*.1, a:.1+Math.random()*.13, d:Math.random()*Math.PI*2});
+}
+initStars(); initClouds();
+
+let pianoX, pianoY, pianoTY;
+function initPiano() { pianoX = W/2; pianoY = H*.32; pianoTY = H*.32; }
+initPiano();
+
+function drawSky() {
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0a0814'); g.addColorStop(.42,'#1a1040'); g.addColorStop(.72,'#3d2060');
+  g.addColorStop(.86,'#8b4a7a'); g.addColorStop(1,'#e8a878');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = 'rgba(200,170,255,.05)';
+  ctx.beginPath(); ctx.ellipse(pianoX, H*.5, W*.5, H*.42, 0,0,Math.PI*2); ctx.fill();
+}
+function drawMoon() {
+  const mx=W*.74, my=H*.16;
+  ctx.fillStyle='rgba(200,160,255,.1)'; ctx.beginPath(); ctx.arc(mx,my,50,0,Math.PI*2); ctx.fill();
+  const mg=ctx.createRadialGradient(mx-6,my-6,2,mx,my,30);
+  mg.addColorStop(0,'#fffbe8'); mg.addColorStop(1,'#f5e8c0');
+  ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(mx,my,30,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(26,16,64,.42)'; ctx.beginPath(); ctx.arc(mx+8,my-4,27,0,Math.PI*2); ctx.fill();
+}
+function drawStars() {
+  stars.forEach(s => {
+    const tw=.5+.5*Math.sin(s.tw+frame*s.sp);
+    ctx.globalAlpha=tw*.8; ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r*tw,0,Math.PI*2); ctx.fill();
+  }); ctx.globalAlpha=1;
+}
+function drawClouds() {
+  clouds.forEach(c => {
+    ctx.globalAlpha=c.a*(.7+.3*Math.sin(c.d+frame*.004));
+    ctx.fillStyle='#d0c8e8';
+    ctx.beginPath(); ctx.ellipse(c.x,c.y,c.w,c.h,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ede8fc';
+    ctx.beginPath(); ctx.ellipse(c.x-c.w*.15,c.y-c.h*.3,c.w*.65,c.h*.75,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.x+c.w*.18,c.y-c.h*.2,c.w*.5,c.h*.6,0,0,Math.PI*2); ctx.fill();
+  }); ctx.globalAlpha=1;
+}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.arcTo(x+w,y,x+w,y+r,r);c.lineTo(x+w,y+h-r);c.arcTo(x+w,y+h,x+w-r,y+h,r);c.lineTo(x+r,y+h);c.arcTo(x,y+h,x,y+h-r,r);c.lineTo(x,y+r);c.arcTo(x,y,x+r,y,r);c.closePath();}
+function drawPiano(px,py) {
+  const s=Math.min(W/500,1);
+  ctx.save(); ctx.translate(px-90*s, py);
+  ctx.strokeStyle='#9070c0'; ctx.lineWidth=.8;
+  ctx.fillStyle='#0d0b24'; rr(ctx,0,12*s,180*s,60*s,4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#1a1535';
+  ctx.beginPath(); ctx.moveTo(0,12*s); ctx.lineTo(150*s,12*s); ctx.lineTo(163*s,-14*s); ctx.lineTo(13*s,-14*s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#f5f0ff'; rr(ctx,6*s,40*s,168*s,26*s,2); ctx.fill();
+  ctx.strokeStyle='rgba(160,130,220,.35)'; ctx.lineWidth=.5;
+  [18,32,46,60,74,88,102,116,130,144,158].forEach(x=>{ctx.beginPath();ctx.moveTo(x*s,40*s);ctx.lineTo(x*s,66*s);ctx.stroke()});
+  ctx.fillStyle='#1a1535';
+  [[11,10,9,20],[25,10,9,20],[53,10,9,20],[67,10,9,20],[81,10,9,20],[109,10,9,20],[123,10,9,20],[151,10,9,20]].forEach(([x,y,w,h])=>{rr(ctx,x*s,(38+y)*s,w*s,h*s,1);ctx.fill()});
+  ctx.restore();
+}
+function drawStaff() {
+  const sy=H-44;
+  ctx.strokeStyle='rgba(144,96,208,.2)'; ctx.lineWidth=.5;
+  for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(18,sy+i*6);ctx.lineTo(W-18,sy+i*6);ctx.stroke();}
+}
+
+function bgLoop() {
+  frame++;
+  pianoTY = H*.32 + Math.sin(frame*.02)*10;
+  pianoY += (pianoTY-pianoY)*.06;
+  clouds.forEach(c=>{c.x+=c.sp; if(c.x>W+160) c.x=-160; c.d+=.002;});
+  ctx.clearRect(0,0,W,H);
+  drawSky(); drawMoon(); drawStars(); drawClouds(); drawStaff(); drawPiano(pianoX, pianoY);
+  if(gameRunning) { updateGame(); drawNotes(); drawParticles(); }
+  requestAnimationFrame(bgLoop);
+}
+bgLoop();
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  currentScreen = id;
+  const map = {home:'s-home',game:'s-game',letter:'s-letter',wall:'s-sky-wall'};
+  const navMap = {home:'nav-home',game:'nav-game',letter:'nav-letter',wall:'nav-wall'};
+  document.getElementById(map[id]).classList.add('active');
+  const nb = document.getElementById(navMap[id]);
+  if(nb) nb.classList.add('active');
+  const nav = document.getElementById('nav-bar');
+  nav.style.display = id==='home' ? 'none' : 'flex';
+  if(id==='game' && !gameRunning) startGame();
+  if(id==='wall') renderWall();
+  if(id==='letter') resetLetterForm();
+  if(id==='home') { stopGame(); }
+}
+
+let gameRunning=false, gScore=0, gLives=3, gCombo=0, gLevel=1, gFrame=0;
+let gNotes=[], gParticles=[], gSpawnT=0, gSpawnI=80;
+const NOTE_NAMES=['C','D','E','F','G','A','B','C♯','D♯','F♯'];
+const COMBOS=['beautiful ✦','ethereal','dreamy','celestial','sublime','transcendent'];
+
+function startGame() {
+  gScore=0; gLives=3; gCombo=0; gLevel=1; gFrame=0; gSpawnT=0; gSpawnI=80;
+  gNotes=[]; gParticles=[];
+  gameRunning=true;
+  document.getElementById('game-over-panel').style.display='none';
+  updateGameHUD();
+}
+function stopGame() { gameRunning=false; gNotes=[]; gParticles=[]; }
+
+function spawnNote() {
+  const x=55+Math.random()*(W-110);
+  const black=Math.random()<.28;
+  const name=NOTE_NAMES[Math.floor(Math.random()*NOTE_NAMES.length)];
+  const spd=.7+gLevel*.16+Math.random()*.35;
+  gNotes.push({x,y:-35,vy:spd,r:black?13:17,black,name,alpha:1,hit:false,missed:false,pulse:0});
+}
+function spawnPart(x,y,good) {
+  const col=good?'#c0f0e0':'#f08080';
+  for(let i=0;i<10;i++){const a=Math.random()*Math.PI*2,sp=1.2+Math.random()*2.8; gParticles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,alpha:1,col,r:1.5+Math.random()*2,life:1});}
+}
+
+function updateGame() {
+  gFrame++; gSpawnT++;
+  if(gSpawnT>=gSpawnI){spawnNote();gSpawnT=0;gSpawnI=Math.max(35,80-gLevel*7);}
+  gNotes.forEach(n=>{
+    n.y+=n.vy;
+    if(n.pulse>0)n.pulse-=.07;
+    if(!n.hit&&!n.missed&&n.y>H-36){
+      n.missed=true; gLives--; gCombo=0; spawnPart(n.x,n.y,false);
+      if(gLives<=0){endGame();return;}
+      updateGameHUD();
+    }
+  });
+  gNotes=gNotes.filter(n=>n.y<H+40&&n.alpha>0);
+  gNotes.forEach(n=>{if(n.hit)n.alpha-=.045;});
+  gParticles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.alpha-=.04;p.r*=.96;});
+  gParticles=gParticles.filter(p=>p.alpha>0);
+  gLevel=1+Math.floor(gScore/180);
+  updateGameHUD();
+}
+function drawNotes() {
+  gNotes.forEach(n=>{
+    ctx.globalAlpha=n.alpha;
+    const pulse=1+n.pulse*.14;
+    if(n.black){
+      ctx.fillStyle='#6040a0'; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*pulse,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#c0a0e8'; ctx.lineWidth=.8; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*pulse,0,Math.PI*2); ctx.stroke();
+    } else {
+      const ng=ctx.createRadialGradient(n.x-3,n.y-3,2,n.x,n.y,n.r*pulse);
+      ng.addColorStop(0,'#ffffff'); ng.addColorStop(.5,'#f0e8ff'); ng.addColorStop(1,'#c0a8e8');
+      ctx.fillStyle=ng; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*pulse,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(150,100,220,.5)'; ctx.lineWidth=.7; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*pulse,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    ctx.font='300 9px Inter,sans-serif'; ctx.fillStyle=n.black?'#d0b8f0':'#5040a0';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(n.name,n.x,n.y);
+  }); ctx.globalAlpha=1;
+}
+function drawParticles() {
+  gParticles.forEach(p=>{ctx.globalAlpha=p.alpha*.85;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}); ctx.globalAlpha=1;
+}
+function hitGame(cx,cy) {
+  let closest=null,minD=999;
+  gNotes.forEach(n=>{
+    if(n.hit||n.missed)return;
+    const d=Math.hypot(cx-n.x,cy-n.y);
+    if(d<n.r+20&&d<minD){minD=d;closest=n;}
+  });
+  if(closest){
+    closest.hit=true; closest.pulse=1; gCombo++;
+    gScore+=( closest.black?20:10)*Math.min(gCombo,5);
+    spawnPart(closest.x,closest.y,true);
+    if(gCombo>=3){
+      const el=document.getElementById('combo-txt');
+      el.textContent=gCombo+'x · '+COMBOS[Math.min(gCombo-3,COMBOS.length-1)];
+      el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',900);
+    }
+  }
+}
+function endGame() {
+  gameRunning=false;
+  const p=document.getElementById('game-over-panel');
+  p.style.display='block';
+  document.getElementById('go-score').textContent='you scored — '+gScore+' stars';
+}
+function updateGameHUD() {
+  document.getElementById('g-score').textContent='score  '+gScore;
+  const lvls=['daydream I','daydream II','ascending','above the clouds','in the sky'];
+  document.getElementById('g-level').textContent=lvls[Math.min(gLevel-1,4)];
+  const hearts=['♡','♡','♡'].map((h,i)=>i<gLives?'<span style="color:#c060a0">♡</span>':'<span style="color:rgba(100,80,120,.3)">♡</span>').join(' ');
+  document.getElementById('g-lives').innerHTML=hearts;
+}
+
+canvas.addEventListener('click',e=>{
+  if(!gameRunning||currentScreen!=='game')return;
+  const r=canvas.getBoundingClientRect();
+  hitGame((e.clientX-r.left),(e.clientY-r.top));
+});
+canvas.addEventListener('touchstart',e=>{
+  if(!gameRunning||currentScreen!=='game')return;
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  Array.from(e.changedTouches).forEach(t=>hitGame(t.clientX-r.left,t.clientY-r.top));
+},{passive:false});
+
+let letters = [];
+try { letters = JSON.parse(localStorage.getItem('pits_letters')||'[]'); } catch(e){ letters=[]; }
+
+const seedLetters = [
+  {name:'Sofia M.', body:'Dear Jessi,\nI found your song at 2am when I couldn\'t sleep. Something about a piano floating in the sky made me feel like maybe my own thoughts could float away too. Thank you for making something so honest.', feeling:'like the night understood me for once', date:'2028-07-01'},
+  {name:'Aiden K.', body:'jessi!! i cried listening to piano in the sky on repeat for an hour. it felt like you wrote it specifically for me even though i know that\'s impossible. that\'s the magic of your music.', feeling:'understood, seen, a little less alone', date:'2028-07-02'},
+  {name:'Nara', body:'Dear Jessi,\nYour voice sounds like a daydream I never want to wake up from. Piano in the Sky plays in my head during every ordinary moment and makes it feel extraordinary.', feeling:'like daydreaming with my eyes open', date:'2028-07-03'},
+];
+if(letters.length===0) letters = [...seedLetters];
+
+function saveLetters() {
+  try { localStorage.setItem('pits_letters', JSON.stringify(letters)); } catch(e){}
+}
+
+function resetLetterForm() {
+  document.getElementById('l-name').value='';
+  document.getElementById('l-body').value='';
+  document.getElementById('l-feeling').value='';
+  document.getElementById('send-note').style.opacity='0';
+}
+
+function sendLetter() {
+  const name = document.getElementById('l-name').value.trim() || 'anonymous dreamer';
+  const body = document.getElementById('l-body').value.trim();
+  const feeling = document.getElementById('l-feeling').value.trim();
+  if(!body) { document.getElementById('l-body').focus(); return; }
+  letters.unshift({name, body, feeling, date: new Date().toISOString().slice(0,10)});
+  saveLetters();
+  const note = document.getElementById('send-note');
+  note.style.opacity='1';
+  setTimeout(()=>{ goTo('wall'); },1400);
+}
+
+function renderWall() {
+  const grid = document.getElementById('letters-grid');
+  const empty = document.getElementById('wall-empty');
+  grid.innerHTML = '';
+  if(letters.length===0){empty.style.display='block';return;}
+  empty.style.display='none';
+  letters.forEach((l,i)=>{
+    const card = document.createElement('div');
+    card.className='letter-card';
+    card.innerHTML=`<div class="card-dot"></div><div class="card-from">${escHtml(l.name)}</div><div class="card-preview">${escHtml(l.body)}</div>`;
+    card.onclick=()=>openExpand(i);
+    grid.appendChild(card);
+  });
+}
+
+function openExpand(i) {
+  const l = letters[i];
+  document.getElementById('exp-name').textContent = l.name + (l.date ? '  ·  '+l.date : '');
+  document.getElementById('exp-feeling').textContent = l.feeling ? '"' + l.feeling + '"' : '';
+  document.getElementById('exp-body').textContent = l.body;
+  document.getElementById('letter-expand').style.display='block';
+}
+function closeExpand() { document.getElementById('letter-expand').style.display='none'; }
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
