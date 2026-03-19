@@ -1,0 +1,435 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+#app{width:100%;font-family:'Inter',sans-serif;background:#0a0814;border-radius:12px;overflow:hidden}
+.page{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:420px;padding:32px 20px;position:relative}
+.page.on{display:flex}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#0a0814 0%,#1a1040 42%,#3d2060 72%,#8b4a7a 88%,#e8a878 100%);z-index:0}
+.stars{position:absolute;inset:0;z-index:1;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite var(--del,0s)}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.85}}
+.page-content{position:relative;z-index:5;width:100%;display:flex;flex-direction:column;align-items:center}
+.home-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,44px);font-weight:300;color:#f0e8ff;letter-spacing:.1em;text-align:center;line-height:1.2}
+.home-sub{font-family:'Cormorant Garamond',serif;font-size:clamp(13px,2.5vw,18px);font-style:italic;color:#9070c0;margin-top:6px;letter-spacing:.05em;text-align:center}
+.home-tag{font-size:10px;font-weight:300;letter-spacing:.22em;color:#5a4070;margin-top:14px;text-transform:uppercase;text-align:center}
+.btns{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Inter',sans-serif;font-size:11px;font-weight:400;letter-spacing:.16em;padding:10px 26px;border-radius:20px;cursor:pointer;border:1px solid rgba(100,190,255,.5);background:transparent;color:#a8d8f8;transition:all .2s}
+.btn:hover{background:rgba(100,190,255,.18);border-color:rgba(100,190,255,.95)}
+.btn.fill{background:rgba(50,150,220,.28);border-color:rgba(100,190,255,.75)}
+.btn.fill:hover{background:rgba(50,150,220,.52)}
+.btn.danger{border-color:rgba(255,80,80,.35);color:rgba(255,140,140,.6);font-size:10px;padding:7px 18px}
+.btn.danger:hover{background:rgba(255,60,60,.12);border-color:rgba(255,80,80,.7);color:rgba(255,160,160,.9)}
+#nav{width:100%;display:flex;justify-content:center;background:rgba(10,8,20,.92);border-top:1px solid rgba(100,190,255,.1)}
+.nb{flex:1;max-width:120px;padding:11px 6px;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:9px;font-weight:300;letter-spacing:.14em;color:#5a4070;text-transform:uppercase;transition:color .2s;text-align:center}
+.nb:hover,.nb.on{color:#a8d8f8}
+.nb.on{border-top:1px solid rgba(100,190,255,.5);margin-top:-1px}
+#game-page{padding:0;height:500px;min-height:500px}
+#game-area{position:absolute;inset:0;overflow:hidden;z-index:3}
+#hud{position:absolute;top:0;left:0;width:100%;display:flex;justify-content:space-between;padding:12px 16px;z-index:10;pointer-events:none}
+.pill{font-size:10px;font-weight:300;letter-spacing:.1em;color:#c8b0e8;background:rgba(13,11,31,.8);padding:5px 13px;border-radius:14px;border:1px solid rgba(150,100,220,.25)}
+#combo{position:absolute;top:54px;left:50%;transform:translateX(-50%);font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:#f0e0ff;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:10}
+.note{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:400;cursor:pointer;z-index:8;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.note.white-key{width:44px;height:44px;background:radial-gradient(circle at 35% 30%,#ffffff,#e8d8ff 50%,#b090d8);border:1.5px solid rgba(180,140,255,.7);color:#3a2880;box-shadow:0 0 12px rgba(160,120,255,.3)}
+.note.black-key{width:34px;height:34px;background:radial-gradient(circle at 35% 30%,#9060e0,#5030a0);border:1.5px solid #c0a0f0;color:#e0d0ff;box-shadow:0 0 10px rgba(120,80,220,.4)}
+@keyframes popBurst{0%{transform:scale(1);opacity:1}30%{transform:scale(1.8);opacity:.9}60%{transform:scale(2.4);opacity:.5}100%{transform:scale(3);opacity:0}}
+.note.popped{pointer-events:none!important;animation:popBurst .45s ease-out forwards!important;background:radial-gradient(circle,#ffffff,#c8f0ff,#80d0ff)!important;border-color:#a0e0ff!important;box-shadow:0 0 30px rgba(160,230,255,.8)!important}
+@keyframes missAnim{0%{transform:scale(1);opacity:1}100%{transform:scale(.5) translateY(30px);opacity:0}}
+.note.missed{pointer-events:none!important;animation:missAnim .4s ease-in forwards!important;background:radial-gradient(circle,#ff8080,#c04040)!important;border-color:#ff6060!important}
+@keyframes scorePop{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-36px)}}
+.score-pop{position:absolute;z-index:15;pointer-events:none;font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:#c8f0ff;font-weight:300;animation:scorePop .7s ease-out forwards}
+#piano-deco{position:absolute;top:16%;left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;animation:bob 4s ease-in-out infinite;opacity:.7}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-9px)}}
+#staff{position:absolute;bottom:36px;left:0;width:100%;z-index:4;pointer-events:none}
+#gover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,8,20,.94);border:1px solid rgba(100,190,255,.3);border-radius:16px;padding:30px 36px;text-align:center;z-index:20;display:none;min-width:240px}
+#gover .gt{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:#f0e8ff;letter-spacing:.06em}
+#gover .gs{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#c8a8e8;margin:12px 0 20px}
+#gover .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#letter-page{justify-content:flex-start;padding:20px;min-height:520px}
+.lform{width:100%;max-width:500px;z-index:5}
+.ltitle{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,4vw,28px);font-weight:300;color:#f0e8ff;letter-spacing:.08em;text-align:center}
+.lhint{font-size:10px;font-weight:300;letter-spacing:.15em;color:#5a4070;text-transform:uppercase;text-align:center;margin:6px 0 20px}
+.lbl{font-size:10px;font-weight:400;letter-spacing:.15em;color:#7060a0;text-transform:uppercase;margin:14px 0 5px;display:block}
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(150,100,220,.3);border-radius:8px;padding:10px 14px;color:#e0d0f8;font-family:'Inter',sans-serif;font-size:13px;font-weight:300;outline:none;transition:border-color .2s;resize:none}
+.inp::placeholder{color:#4a3868}
+.inp:focus{border-color:rgba(100,190,255,.65)}
+.inp.err{border-color:rgba(255,100,100,.7)!important}
+textarea.inp{min-height:130px;line-height:1.7;resize:vertical}
+.lactions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
+#sent-msg{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:#a8d8f8;margin-top:10px;text-align:center;min-height:20px;opacity:0;transition:opacity .5s}
+#wall-page{justify-content:flex-start;padding:16px;min-height:480px}
+.wtitle{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,3.5vw,24px);font-weight:300;color:#f0e8ff;letter-spacing:.08em;text-align:center;margin-bottom:4px}
+.wsub{font-size:10px;font-weight:300;letter-spacing:.15em;color:#5a4070;text-align:center;margin-bottom:16px;text-transform:uppercase}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:11px;width:100%;max-width:560px;z-index:5}
+.wcard{background:rgba(255,255,255,.04);border:1px solid rgba(150,100,220,.2);border-radius:10px;padding:13px;cursor:pointer;transition:all .2s;position:relative}
+.wcard:hover{background:rgba(100,190,255,.07);border-color:rgba(100,190,255,.4)}
+.wfrom{font-size:9px;font-weight:400;letter-spacing:.14em;color:#7060a0;text-transform:uppercase;margin-bottom:5px}
+.wprev{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:#c8a8e8;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.wdot{width:6px;height:6px;border-radius:50%;background:#60b8f0;position:absolute;top:11px;right:11px;opacity:.5}
+.wempty{text-align:center;padding:36px 20px;color:#4a3868;font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;z-index:5}
+.wall-footer{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap;justify-content:center;z-index:5}
+
+/* confirm toast */
+#confirm-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#140e28;border:1px solid rgba(255,100,100,.4);border-radius:12px;padding:14px 22px;z-index:200;display:none;text-align:center;min-width:240px}
+#confirm-toast p{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:#f0d0d0;margin-bottom:12px}
+#confirm-toast .crow{display:flex;gap:10px;justify-content:center}
+
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99;display:none}
+#expand{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(420px,90vw);background:#140e28;border:1px solid rgba(100,190,255,.35);border-radius:14px;padding:28px;z-index:100;display:none}
+#expand .ename{font-size:10px;font-weight:400;letter-spacing:.18em;color:#7060a0;text-transform:uppercase;margin-bottom:6px}
+#expand .efeel{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:#5a4070;margin-bottom:10px}
+#expand .ebody{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;font-style:italic;color:#e0d0f8;line-height:1.8;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto}
+#expand .xbtn{position:absolute;top:13px;right:15px;background:none;border:none;color:#a8d8f8;font-size:20px;cursor:pointer;line-height:1;font-family:serif}
+</style>
+
+<div id="app">
+
+  <!-- HOME -->
+  <div class="page on" id="home-page">
+    <div class="sky"></div>
+    <div class="stars" id="home-stars"></div>
+    <div class="page-content">
+      <div class="home-title">Piano in the Sky</div>
+      <div class="home-sub">a daydream by jessi lilli</div>
+      <div class="home-tag">fan experience</div>
+      <div class="btns">
+        <button class="btn fill" onclick="go('game')">play the dream</button>
+        <button class="btn" onclick="go('letter')">write to jessi</button>
+        <button class="btn" onclick="go('wall')">sky wall</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="page" id="game-page">
+    <div class="sky"></div>
+    <div class="stars" id="game-stars"></div>
+    <div id="piano-deco">
+      <svg width="170" height="76" viewBox="0 0 180 76">
+        <rect x="0" y="14" width="180" height="58" rx="4" fill="#0d0b24" stroke="#9070c0" stroke-width=".8"/>
+        <path d="M0 14 L150 14 L163 -12 L13 -12 Z" fill="#1a1535" stroke="#9070c0" stroke-width=".8"/>
+        <rect x="6" y="40" width="168" height="26" rx="2" fill="#f5f0ff"/>
+        <line x1="18" y1="40" x2="18" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="32" y1="40" x2="32" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="46" y1="40" x2="46" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="60" y1="40" x2="60" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="74" y1="40" x2="74" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="88" y1="40" x2="88" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="102" y1="40" x2="102" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="116" y1="40" x2="116" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="130" y1="40" x2="130" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="144" y1="40" x2="144" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <line x1="158" y1="40" x2="158" y2="66" stroke="rgba(160,130,220,.35)" stroke-width=".5"/>
+        <rect x="11" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="25" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="53" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="67" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="81" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="109" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="123" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+        <rect x="151" y="40" width="9" height="17" rx="1" fill="#1a1535"/>
+      </svg>
+    </div>
+    <svg id="staff" height="44">
+      <line x1="10" y1="8"  x2="9999" y2="8"  stroke="rgba(144,96,208,.22)" stroke-width=".6"/>
+      <line x1="10" y1="17" x2="9999" y2="17" stroke="rgba(144,96,208,.22)" stroke-width=".6"/>
+      <line x1="10" y1="26" x2="9999" y2="26" stroke="rgba(144,96,208,.22)" stroke-width=".6"/>
+      <line x1="10" y1="35" x2="9999" y2="35" stroke="rgba(144,96,208,.22)" stroke-width=".6"/>
+      <line x1="10" y1="44" x2="9999" y2="44" stroke="rgba(144,96,208,.22)" stroke-width=".6"/>
+    </svg>
+    <div id="game-area"></div>
+    <div id="hud">
+      <div class="pill" id="gscore">score  0</div>
+      <div class="pill" id="glevel">daydream I</div>
+      <div class="pill" id="glives">♡ ♡ ♡</div>
+    </div>
+    <div id="combo"></div>
+    <div id="gover">
+      <div class="gt">the dream fades</div>
+      <div class="gs" id="go-score">you scored — 0 stars</div>
+      <div class="row">
+        <button class="btn fill" onclick="startGame()">dream again</button>
+        <button class="btn" onclick="go('letter')">write to jessi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LETTER -->
+  <div class="page" id="letter-page">
+    <div class="sky"></div>
+    <div class="stars" id="letter-stars"></div>
+    <div class="lform page-content">
+      <div class="ltitle">a letter to jessi</div>
+      <div class="lhint">send your words into the sky</div>
+      <label class="lbl">your name</label>
+      <input class="inp" id="l-name" type="text" placeholder="what shall i call you?">
+      <label class="lbl">your message</label>
+      <textarea class="inp" id="l-body" placeholder="dear jessi, your music found me when..."></textarea>
+      <label class="lbl">how did piano in the sky make you feel?</label>
+      <input class="inp" id="l-feel" type="text" placeholder="like floating, like being understood...">
+      <div class="lactions">
+        <button class="btn" onclick="go('home')">back</button>
+        <button class="btn fill" onclick="sendLetter()">release into the sky</button>
+      </div>
+      <div id="sent-msg">your letter has floated up to jessi ✦</div>
+    </div>
+  </div>
+
+  <!-- WALL -->
+  <div class="page" id="wall-page">
+    <div class="sky"></div>
+    <div class="stars" id="wall-stars"></div>
+    <div class="page-content" style="align-items:center">
+      <div class="wtitle" style="z-index:5">the sky wall</div>
+      <div class="wsub" style="z-index:5">letters from the dreamers</div>
+      <div class="wgrid" id="wgrid"></div>
+      <div class="wempty" id="wempty" style="display:none">no letters yet — be the first</div>
+      <div class="wall-footer">
+        <button class="btn" onclick="go('letter')">add your letter</button>
+        <button class="btn danger" onclick="askClear()">clear wall</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="nav" style="display:none">
+    <button class="nb on" id="nb-home" onclick="go('home')">home</button>
+    <button class="nb" id="nb-game" onclick="go('game')">play</button>
+    <button class="nb" id="nb-letter" onclick="go('letter')">write</button>
+    <button class="nb" id="nb-wall" onclick="go('wall')">sky wall</button>
+  </div>
+</div>
+
+<!-- confirm toast -->
+<div id="confirm-toast">
+  <p>clear all letters from the sky wall?</p>
+  <div class="crow">
+    <button class="btn danger" onclick="confirmClear()">yes, clear all</button>
+    <button class="btn" onclick="cancelClear()">keep them</button>
+  </div>
+</div>
+
+<div id="overlay" onclick="closeExp()"></div>
+<div id="expand">
+  <button class="xbtn" onclick="closeExp()">×</button>
+  <div class="ename" id="exp-name"></div>
+  <div class="efeel" id="exp-feel"></div>
+  <div class="ebody" id="exp-body"></div>
+</div>
+
+<script>
+function makeStars(id, n) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*70}%;width:${.5+Math.random()*1.4}px;height:${.5+Math.random()*1.4}px;--d:${2+Math.random()*4}s;--del:${-Math.random()*4}s`;
+    c.appendChild(s);
+  }
+}
+['home-stars','game-stars','letter-stars','wall-stars'].forEach(id => makeStars(id, 55));
+
+let curPage = 'home';
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById(id + '-page').classList.add('on');
+  const nb = document.getElementById('nb-' + id);
+  if (nb) nb.classList.add('on');
+  document.getElementById('nav').style.display = id === 'home' ? 'none' : 'flex';
+  curPage = id;
+  if (id === 'game' && !gRunning) startGame();
+  if (id === 'home') stopGame();
+  if (id === 'wall') renderWall();
+  if (id === 'letter') resetForm();
+}
+
+/* GAME */
+let gRunning = false, gScore = 0, gLives = 3, gCombo = 0, gLevel = 1;
+let spawnTimer = null, noteObjects = [], animFrame = null, lastTs = null;
+const NOTE_NAMES = ['C','D','E','F','G','A','B','C♯','D♯','F♯'];
+const COMBOS = ['beautiful ✦','ethereal','dreamy','celestial','sublime','transcendent'];
+
+function fallSpeed(){ return Math.min(55 + (gLevel-1)*10, 130); }
+function spawnMs(){   return Math.max(1800 - (gLevel-1)*120, 700); }
+
+function startGame(){
+  stopGame();
+  gScore=0; gLives=3; gCombo=0; gLevel=1; noteObjects=[];
+  document.getElementById('gover').style.display='none';
+  document.getElementById('game-area').innerHTML='';
+  gRunning=true; lastTs=null;
+  updateHUD(); scheduleSpawn(); requestAnimationFrame(runLoop);
+}
+function stopGame(){
+  gRunning=false; clearTimeout(spawnTimer); cancelAnimationFrame(animFrame);
+  document.getElementById('game-area').innerHTML=''; noteObjects=[];
+}
+function scheduleSpawn(){
+  if(!gRunning) return;
+  spawnNote();
+  spawnTimer=setTimeout(scheduleSpawn, spawnMs());
+}
+function runLoop(ts){
+  if(!gRunning) return;
+  if(!lastTs) lastTs=ts;
+  const dt=Math.min((ts-lastTs)/1000,.1); lastTs=ts;
+  const area=document.getElementById('game-area');
+  const aH=area.offsetHeight||500;
+  const px=fallSpeed()*dt;
+  noteObjects.forEach(n=>{
+    if(n.dead) return;
+    n.y+=px;
+    n.el.style.top=n.y+'px';
+    if(n.y>aH-10){
+      n.dead=true;
+      n.el.classList.add('missed');
+      gCombo=0; gLives--; updateHUD();
+      setTimeout(()=>{ try{n.el.remove();}catch(e){} },450);
+      if(gLives<=0) setTimeout(endGame,200);
+    }
+  });
+  noteObjects=noteObjects.filter(n=>!n.dead);
+  animFrame=requestAnimationFrame(runLoop);
+}
+let nid=0;
+function spawnNote(){
+  if(!gRunning) return;
+  const area=document.getElementById('game-area');
+  const aW=area.offsetWidth||360;
+  const isBlack=Math.random()<.28;
+  const name=NOTE_NAMES[Math.floor(Math.random()*NOTE_NAMES.length)];
+  const size=isBlack?34:44;
+  const margin=size/2+8;
+  const x=margin+Math.random()*(aW-margin*2);
+  const el=document.createElement('div');
+  el.className='note '+(isBlack?'black-key':'white-key');
+  el.textContent=name;
+  el.style.left=(x-size/2)+'px';
+  el.style.top=(-size)+'px';
+  el.style.width=size+'px';
+  el.style.height=size+'px';
+  el.style.fontSize=isBlack?'10px':'12px';
+  const id=++nid;
+  const obj={id,el,y:-size,dead:false,isBlack};
+  function pop(e){
+    e.stopPropagation();
+    if(obj.dead) return;
+    obj.dead=true;
+    el.classList.add('popped');
+    el.style.pointerEvents='none';
+    const pts=(isBlack?20:10)*Math.min(gCombo+1,5);
+    const sp=document.createElement('div');
+    sp.className='score-pop';
+    sp.textContent='+'+pts;
+    sp.style.left=el.style.left;
+    sp.style.top=Math.max(obj.y-10,10)+'px';
+    area.appendChild(sp);
+    setTimeout(()=>{ try{sp.remove();}catch(e){} },750);
+    gCombo++; gScore+=pts;
+    gLevel=1+Math.floor(gScore/200);
+    updateHUD();
+    if(gCombo>=3){
+      const ct=document.getElementById('combo');
+      ct.textContent=gCombo+'x · '+COMBOS[Math.min(gCombo-3,COMBOS.length-1)];
+      ct.style.opacity='1'; clearTimeout(ct._t);
+      ct._t=setTimeout(()=>ct.style.opacity='0',1000);
+    }
+    setTimeout(()=>{ try{el.remove();}catch(e){} },480);
+  }
+  el.addEventListener('pointerdown',pop);
+  area.appendChild(el);
+  noteObjects.push(obj);
+}
+function endGame(){
+  gRunning=false; clearTimeout(spawnTimer);
+  document.getElementById('go-score').textContent='you scored — '+gScore+' stars';
+  document.getElementById('gover').style.display='block';
+}
+function updateHUD(){
+  document.getElementById('gscore').textContent='score  '+gScore;
+  const lvls=['daydream I','daydream II','ascending','above the clouds','in the sky'];
+  document.getElementById('glevel').textContent=lvls[Math.min(gLevel-1,4)];
+  const h=[0,1,2].map(i=>`<span style="color:${i<gLives?'#c060a0':'rgba(100,80,120,.3)'}">♡</span>`).join(' ');
+  document.getElementById('glives').innerHTML=h;
+}
+
+/* LETTERS */
+const SEED = [
+  {name:'Sofia M.', body:'Dear Jessi,\nI found your song at 2am when I couldn\'t sleep. Something about a piano floating in the sky made me feel like my own thoughts could float away too. Thank you.', feel:'like the night understood me for once', date:'2028-07-01'},
+  {name:'Aiden K.', body:'jessi!! i cried listening to piano in the sky on repeat for an hour. it felt like you wrote it for me. that\'s the magic of your music.', feel:'understood, seen, a little less alone', date:'2028-07-02'},
+  {name:'Nara', body:'Dear Jessi,\nYour voice sounds like a daydream I never want to wake from. Piano in the Sky makes every ordinary moment feel extraordinary.', feel:'like daydreaming with my eyes open', date:'2028-07-03'},
+];
+let letters=[];
+try{ letters=JSON.parse(localStorage.getItem('pits_v2')||'[]'); }catch(e){ letters=[]; }
+if(!letters.length) letters=[...SEED];
+
+function saveLetters(){ try{localStorage.setItem('pits_v2',JSON.stringify(letters));}catch(e){} }
+
+function resetForm(){
+  ['l-name','l-body','l-feel'].forEach(id=>{
+    const el=document.getElementById(id); el.value=''; el.classList.remove('err');
+  });
+  document.getElementById('sent-msg').style.opacity='0';
+}
+function sendLetter(){
+  const body=document.getElementById('l-body');
+  if(!body.value.trim()){
+    body.classList.add('err');
+    setTimeout(()=>body.classList.remove('err'),1500);
+    body.focus(); return;
+  }
+  letters.unshift({
+    name:document.getElementById('l-name').value.trim()||'anonymous dreamer',
+    body:body.value.trim(),
+    feel:document.getElementById('l-feel').value.trim(),
+    date:new Date().toISOString().slice(0,10)
+  });
+  saveLetters();
+  document.getElementById('sent-msg').style.opacity='1';
+  setTimeout(()=>go('wall'),1600);
+}
+
+function renderWall(){
+  const grid=document.getElementById('wgrid');
+  const empty=document.getElementById('wempty');
+  grid.innerHTML='';
+  if(!letters.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  letters.forEach((l,i)=>{
+    const d=document.createElement('div');
+    d.className='wcard';
+    d.innerHTML=`<div class="wdot"></div><div class="wfrom">${esc(l.name)}</div><div class="wprev">${esc(l.body)}</div>`;
+    d.onclick=()=>openExp(i);
+    grid.appendChild(d);
+  });
+}
+
+/* CLEAR WALL */
+function askClear(){
+  document.getElementById('confirm-toast').style.display='block';
+}
+function cancelClear(){
+  document.getElementById('confirm-toast').style.display='none';
+}
+function confirmClear(){
+  letters=[];
+  try{ localStorage.removeItem('pits_v2'); }catch(e){}
+  document.getElementById('confirm-toast').style.display='none';
+  renderWall();
+}
+
+function openExp(i){
+  const l=letters[i];
+  document.getElementById('exp-name').textContent=l.name+(l.date?'  ·  '+l.date:'');
+  document.getElementById('exp-feel').textContent=l.feel?'"'+l.feel+'"':'';
+  document.getElementById('exp-body').textContent=l.body;
+  document.getElementById('overlay').style.display='block';
+  document.getElementById('expand').style.display='block';
+}
+function closeExp(){
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('expand').style.display='none';
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
